@@ -319,6 +319,14 @@ int main(int argc, char *argv[])
     printf("[EMU] Window: %dx%d  Renderer: %dx%d  DPI scale: %.1f\n",
            win_w, win_h, render_w, render_h, g_dpi_scale);
 
+    // Map all render coordinates to skin space (SKIN_W x SKIN_H = 1280x840).
+    // LCD_SX/SY/SW/SH constants are expressed in skin coords; without this call
+    // SDL would interpret them in renderer-output pixels (640x420 on 1× displays,
+    // 1280x840 on HiDPI), causing the LCD rect to appear only in the top-left
+    // quarter of the window.
+    SDL_RenderSetLogicalSize(g_ren, SKIN_W, SKIN_H);
+    printf("[EMU] Logical render size: %dx%d\n", SKIN_W, SKIN_H);
+
     SDL_Surface *surf = IMG_Load("assets/device_skin.png");
     if (!surf) { fprintf(stderr, "skin: %s\n", IMG_GetError()); return 1; }
     g_skin_tex = SDL_CreateTextureFromSurface(g_ren, surf);

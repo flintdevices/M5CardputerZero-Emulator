@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Paths
-set(VENDOR_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/M5CardputerZero-Launcher)
+set(VENDOR_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/M5CardputerZero-UserDemo)
 set(APPLAUNCH  ${VENDOR_DIR}/projects/APPLaunch/main)
 set(USERDEMO   ${VENDOR_DIR}/projects/UserDemo/main)
 
@@ -225,7 +225,7 @@ else()
 endif()
 add_dependencies(cardputer-emu lvgl lvgl_thorvg)
 # Export all symbols so dlopen'd apps can resolve LVGL functions
-if(APPLE)
+if(APPLE OR UNIX)
     set_target_properties(cardputer-emu PROPERTIES ENABLE_EXPORTS ON)
 endif()
 
@@ -298,6 +298,14 @@ if(NOT WIN32)
     target_link_libraries(cardputer-emu PRIVATE ${CMAKE_DL_LIBS})
     find_package(Threads REQUIRED)
     target_link_libraries(cardputer-emu PRIVATE Threads::Threads)
+endif()
+
+# libutil (openpty) — needed on Linux so dlopen'd app libs (e.g. APPLaunch) can
+# resolve openpty from the host process symbol table.
+# --no-as-needed forces libutil.so into the NEEDED list even though the emulator
+# itself never calls openpty directly; the symbol is then visible to dlopen'd .so files.
+if(UNIX AND NOT APPLE)
+    target_link_options(cardputer-emu PRIVATE -Wl,--no-as-needed -lutil -Wl,--as-needed)
 endif()
 
 # ---------------------------------------------------------------------------
